@@ -41,6 +41,8 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PiePlot3D;
 import org.jfree.data.general.DefaultPieDataset;
 import org.jfree.util.Rotation;
+import org.freedom.layout.graphics.strategy.AgrupamentoPorPercentual;
+import org.freedom.layout.graphics.strategy.EstrategiaAgrupamento;
 
 public class BalancetePizza extends LeiauteGR {
 
@@ -55,6 +57,8 @@ public class BalancetePizza extends LeiauteGR {
 	private Font fnCabEmpNeg = new Font( "Arial", Font.BOLD, 8 );
 
 	private Font fnLabel = new Font( "Arial", Font.BOLD, 10 );
+
+	private EstrategiaAgrupamento estrategiaAgrupamento = new AgrupamentoPorPercentual(3.0);
 
 	private ResultSet rs = null;
 
@@ -113,7 +117,6 @@ public class BalancetePizza extends LeiauteGR {
 		double dVlrOutros = 0.0;
 		double dVlrTotal = 0.0;
 		double dValor = 0.0;
-		double dValorPerc = 0.0;
 		String sLabel = "";
 		try {
 			while ( rs.next() ) {
@@ -129,8 +132,8 @@ public class BalancetePizza extends LeiauteGR {
 
 		for ( int i2 = 0; vData.size() > i2; i2++ ) {
 			dValor = ( (Double) vData.elementAt( i2 ).elementAt( 1 ) ).doubleValue();
-			dValorPerc = ( dValor * 100 ) / dVlrTotal;
-			if ( dValorPerc < 3.0 ) {
+			
+			if ( estrategiaAgrupamento.deveAgrupar(dValor, dVlrTotal) ) {
 				dVlrOutros += dValor;
 			}
 			else {

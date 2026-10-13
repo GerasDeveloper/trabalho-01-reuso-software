@@ -38,6 +38,8 @@ import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.category.DefaultCategoryDataset;
+import org.freedom.layout.graphics.strategy.AgrupamentoPorPercentual;
+import org.freedom.layout.graphics.strategy.EstrategiaAgrupamento;
 
 public class BalanceteBarras extends LeiauteGR {
 
@@ -50,6 +52,8 @@ public class BalanceteBarras extends LeiauteGR {
 	private Font fnCabEmp = new Font( "Arial", Font.PLAIN, 8 );
 
 	private Font fnCabEmpNeg = new Font( "Arial", Font.BOLD, 8 );
+
+	private EstrategiaAgrupamento estrategiaAgrupamento = new AgrupamentoPorPercentual(3.0);
 
 	private DefaultCategoryDataset datasetBar = new DefaultCategoryDataset();
 
@@ -94,7 +98,6 @@ public class BalanceteBarras extends LeiauteGR {
 		double dVlrOutros = 0.0;
 		double dVlrTotal = 0.0;
 		double dValor = 0.0;
-		double dValorPerc = 0.0;
 		String sLabel = "";
 		try {
 			while ( rs.next() ) {
@@ -110,8 +113,8 @@ public class BalanceteBarras extends LeiauteGR {
 
 		for ( int i2 = 0; vData.size() > i2; i2++ ) {
 			dValor = ( (Double) vData.elementAt( i2 ).elementAt( 1 ) ).doubleValue();
-			dValorPerc = ( dValor * 100 ) / dVlrTotal;
-			if ( dValorPerc < 3.0 ) {
+			
+			if ( estrategiaAgrupamento.deveAgrupar(dValor, dVlrTotal) ) {
 				dVlrOutros += dValor;
 			}
 			else {
