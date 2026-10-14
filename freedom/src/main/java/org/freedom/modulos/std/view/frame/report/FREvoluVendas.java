@@ -25,8 +25,8 @@
 package org.freedom.modulos.std.view.frame.report;
 
 import org.freedom.infra.model.jdbc.DbConnection;
-import org.freedom.layout.graphics.EvoluVendasBarras;
-import org.freedom.layout.graphics.EvoluVendasLinha;
+import org.freedom.layout.graphics.factory.RelatorioEvolucaoVendasFactory;
+import org.freedom.library.component.LeiauteGR;
 import org.freedom.library.functions.Funcoes;
 import org.freedom.library.persistence.GuardaCampo;
 import org.freedom.library.persistence.ListaCampos;
@@ -274,22 +274,9 @@ public class FREvoluVendas extends FRelatorio {
 
 		try {
 
-			if ( "B".equals( rgGrafico.getVlrString() ) ) {
-
-				EvoluVendasBarras evVendas = new EvoluVendasBarras();
-				evVendas.setConexao( con );
-				evVendas.setConsulta( buscaValores() );
-				dl = new FPrinterJob( evVendas, this );
-				dl.setVisible( true );
-			}
-			else if ( "L".equals( rgGrafico.getVlrString() ) ) {
-
-				EvoluVendasLinha evVendas = new EvoluVendasLinha();
-				evVendas.setConexao( con );
-				evVendas.setConsulta( buscaValores() );
-				dl = new FPrinterJob( evVendas, this );
-				dl.setVisible( true );
-			}
+			LeiauteGR evVendas = RelatorioEvolucaoVendasFactory.criarRelatorio( rgGrafico.getVlrString(), con, buscaValores() );
+			dl = new FPrinterJob( evVendas, this );
+			dl.setVisible( true );
 		} catch ( Exception err ) {
 			Funcoes.mensagemInforma( this, "Não foi possível carregar relatório!\n" + err.getMessage() );
 			err.printStackTrace();
