@@ -231,7 +231,7 @@ public final class WebServiceCep {
 		        //proxy user and pass
 		        con.setRequestProperty(
 		        	"Proxy-Authorization", 
-		        	"Basic " + new sun.misc.BASE64Encoder().encode(
+		        	"Basic " + java.util.Base64.getEncoder().encodeToString(
 		        		(Aplicativo.getInstace().getUsuarioproxy() + ":" + SimpleCrypt.decrypt( Aplicativo.getInstace().getSenhaproxy() )).getBytes()
 		        	)
 		        );
