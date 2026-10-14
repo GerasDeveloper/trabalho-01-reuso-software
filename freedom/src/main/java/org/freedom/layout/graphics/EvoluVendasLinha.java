@@ -1,180 +1,137 @@
-/**
- * @version 10/08/2003 <BR>
- * @author Setpoint Informática Ltda./Anderson Sanchez <BR>
- * 
- *         Projeto: Freedom <BR>
- * 
- *         Pacote: org.freedom.relatorios <BR>
- *         Classe:
- * @(#)EvoluVendasLinha.java <BR>
- * 
- *                           Este arquivo é parte do sistema Freedom-ERP, o Freedom-ERP é um software livre; você pode redistribui-lo e/ou <BR>
- *                           modifica-lo dentro dos termos da Licença Pública Geral GNU como publicada pela Fundação do Software Livre (FSF); <BR>
- *                           na versão 2 da Licença, ou (na sua opnião) qualquer versão. <BR>
- *                           Este programa é distribuido na esperança que possa ser util, mas SEM NENHUMA GARANTIA; <BR>
- *                           sem uma garantia implicita de ADEQUAÇÂO a qualquer MERCADO ou APLICAÇÃO EM PARTICULAR. <BR>
- *                           Veja a Licença Pública Geral GNU para maiores detalhes. <BR>
- *                           Você deve ter recebido uma cópia da Licença Pública Geral GNU junto com este programa, se não, <BR>
- *                           de acordo com os termos da LPG-PC <BR>
- * <BR>
- * 
- *                           Gráfico de evolução de vendas no formato de linha variante.
- * 
- */
-
 package org.freedom.layout.graphics;
 
 import java.awt.Color;
 import java.awt.Font;
-import org.freedom.infra.model.jdbc.DbConnection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Vector;
 
-import org.freedom.library.component.LeiauteGR;
 import org.freedom.library.functions.Funcoes;
+
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
+
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
-public class EvoluVendasLinha extends LeiauteGR {
+public class EvoluVendasLinha
+        extends RelatorioEvolucaoVendas {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	private DbConnection con = null;
+    private final Font fnLegenda =
+            new Font(
+                    "Arial",
+                    Font.PLAIN,
+                    8
+            );
 
-	private Font fnLegenda = new Font( "Arial", Font.BOLD, 10 );
+    private final XYSeriesCollection datasetLinha =
+            new XYSeriesCollection();
 
-	private Font fnTopEmp = new Font( "Arial", Font.BOLD, 11 );
+    private final Vector<String> vLegenda =
+            new Vector<String>();
 
-	private Font fnCabEmp = new Font( "Arial", Font.PLAIN, 8 );
+    @Override
+    protected void processarDados() {
 
-	private Font fnCabEmpNeg = new Font( "Arial", Font.BOLD, 8 );
+        XYSeries serie =
+                new XYSeries("Vendas");
 
-	private XYSeriesCollection datasetLinha = new XYSeriesCollection();
+        try {
 
-	private ResultSet rs = null;
+            int indice = 1;
 
-	Vector<?> vParamOrc = new Vector<Object>();
+            while (rs.next()) {
 
-	public void montaG() {
+                serie.add(
+                        indice,
+                        rs.getDouble("VLR")
+                );
 
-		impRaz( false );
-		montaCabEmp( con );
-		montaRel();
-	}
+                vLegenda.add(
+                        rs.getString("MESANO")
+                );
 
-	private JFreeChart createXYLineChart( XYSeriesCollection dataset ) {
+                indice++;
+            }
 
-		JFreeChart chart = ChartFactory.createXYLineChart( "", // Título
-				"Meses", // Label X
-				"Valores", // Label Y
-				dataset, // Dados
-				PlotOrientation.VERTICAL, // Orientação
-				false, // Legenda
-				false, // Tooltips
-				false // urls
-				);
+            datasetLinha.addSeries(serie);
+        }
+        catch (SQLException err) {
 
-		chart.setBackgroundPaint( new Color( 255, 255, 255 ) );
-		return chart;
-	}
+            Funcoes.mensagemErro(
+                    this,
+                    "Erro ao processar dados!\n"
+                            + err.getMessage(),
+                    true,
+                    con,
+                    err
+            );
+        }
+    }
 
-	private void montaRel() {
+    @Override
+    protected JFreeChart criarGrafico() {
 
-		imprimeRodape( false );
-		Vector<String> vLegenda = new Vector<String>();
+        JFreeChart chart =
+                ChartFactory.createXYLineChart(
+                        "",
+                        "",
+                        "Valor",
+                        datasetLinha,
+                        PlotOrientation.VERTICAL,
+                        false,
+                        true,
+                        false
+                );
 
-		try {
-			XYSeries series = new XYSeries( "Evolução de vendas" );
+        chart.setBackgroundPaint(
+                Color.WHITE
+        );
 
-			while ( rs.next() ) {
+        return chart;
+    }
 
-				series.add( rs.getInt( 2 ), rs.getDouble( 1 ) );
-				vLegenda.addElement( Funcoes.adicionaEspacos( Funcoes.strMes( rs.getInt( 2 ) ), 3 ) + "/" + rs.getString( 3 ) + " >" + Funcoes.strDecimalToStrCurrency( 14, 2, rs.getString( 1 ) ) + " ) " );
-			}
+    @Override
+    protected void desenharRelatorio(
+            JFreeChart chart
+    ) {
 
-			datasetLinha.addSeries( series );
+        int iY =
+                desenharCabecalhoEvolucaoVendas();
 
-		} catch ( SQLException e ) {
-			e.printStackTrace();
-			Funcoes.mensagemInforma( this, "Erro na consulta de valores!\n" + e.getMessage() );
-		}
+        iY += 30;
 
-		JFreeChart chart = createXYLineChart( datasetLinha );
+        drawGrafico(
+                chart,
+                15,
+                iY,
+                500,
+                400
+        );
 
-		setBordaRel();
+        iY += 410;
 
-		int iY = 35;
+        setFonte(fnLegenda);
 
-		drawLinha( 0, iY, 0, 0, AL_LL );
+        for (
+                int i = 0;
+                i < vLegenda.size();
+                i++
+        ) {
 
-		iY += 14;
+            drawTexto(
+                    (i + 1)
+                            + " - "
+                            + vLegenda.get(i),
+                    20,
+                    iY,
+                    120,
+                    AL_LL
+            );
 
-		setFonte( fnTopEmp );
-		drawTexto( "EVOLUÇÃO DE VENDAS", 0, iY, getFontMetrics( fnCabEmp ).stringWidth( "  EVOLUÇÃO DE VENDAS  " ), AL_CEN );
-		setFonte( fnCabEmpNeg );
-
-		iY += 6;
-
-		drawLinha( 0, iY, 0, 0, AL_LL );
-
-		iY += 30;
-
-		drawGrafico( chart, 15, iY, 500, 400 );
-
-		// setFonte(fnTitulo);
-		// drawTexto("LEITURA",0,522,getFontMetrics(fnTitulo).stringWidth(" LEITURA "),AL_CEN);
-		// drawLinha(30,525,25,0,AL_CDIR);
-		// drawLinha(290,525,290,730);
-
-		int ix = 0;
-		iY = 525;
-		int iSalto = 0;
-
-		setFonte( fnLegenda );
-		int iPos = 50;
-		for ( int i = 0; vLegenda.size() > i; i++ ) {
-			if ( iPos == 50 ) {
-				drawTexto( vLegenda.elementAt( i ).toString(), iPos, iY );
-				ix = 140;
-				iSalto = 0;
-			}
-			else if ( iPos == 190 ) {
-				drawTexto( vLegenda.elementAt( i ).toString(), iPos, iY );
-				ix = 140;
-				iSalto = 0;
-			}
-			else if ( iPos == 330 ) {
-				drawTexto( vLegenda.elementAt( i ).toString(), iPos, iY );
-				ix = -280;
-				iSalto = 15;
-			}
-			iY += iSalto;
-			iPos += ix;
-		}
-
-		drawRetangulo( 45, 510, 60, iY - 510 - 5, AL_CDIR );
-
-		termPagina();
-		finaliza();
-	}
-
-	public void setParam( Vector<?> vParam ) {
-
-		vParamOrc = vParam;
-	}
-
-	public void setConsulta( ResultSet rs2 ) {
-
-		rs = rs2;
-	}
-
-	public void setConexao( DbConnection cn ) {
-
-		con = cn;
-	}
-
+            iY += 10;
+        }
+    }
 }
